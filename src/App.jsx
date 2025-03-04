@@ -53,7 +53,7 @@ export default function App() {
             <EffectComposer ref={composer}>
                 {/* <ToneMapping/> */}
                 <CustomOverlay/>
-                {/* <Bloom intensity={20} luminanceThreshold={0.0} luminanceSmoothing={0.2} /> */}
+                {/* <Bloom intensity={0.5} luminanceThreshold={0.} luminanceSmoothing={0.2} /> */}
             </EffectComposer>
             <Utilities />
         </Canvas>
