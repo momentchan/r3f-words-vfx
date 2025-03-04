@@ -4,7 +4,8 @@ import { extend } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useMemo, useState, useEffect } from "react";
 import { useControls } from "leva";
-import fragmentShader from './fragment.glsl'
+import fragmentShader from './shaders/text/fragment.glsl'
+import vertexShader from './shaders/text/vertex.glsl'
 import { poems } from "./poems";
 
 const ColorShiftMaterial = shaderMaterial(
@@ -16,29 +17,45 @@ const ColorShiftMaterial = shaderMaterial(
         tiling: 1.0,
         speed: 1.0,
         noiseRange: [0, 1],
-        screenResolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
+        screenResolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+        ratio: 0.0, // Initialize typing ratio in shader
+        seed: 0.5,
+        hshift: 0,
     },
     // vertex shader
-    /*glsl*/`
-      varying vec2 vUv;
-      
-      void main() {
-        vUv = uv; // Object UV
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
+    vertexShader
+    ,
     fragmentShader
 );
 
 // Extend Three.js with the custom shader material
 extend({ ColorShiftMaterial });
-const randomRotation = () => [
-    0,
-    (Math.random() * 2 - 1) * Math.PI * 0.1,
-    (Math.random() * 2 - 1) * Math.PI * 0.5 // Random rotation within [-PI, PI]
-];
-export const GradientText = ({ position, color, alpha, speed }) => {
-    const selectedPoem = poems[1];
+const randomPositionAndRotation = (minRadius, maxRadius, minAngle, maxAngle) => {
+    const radius = Math.random() * (maxRadius - minRadius) + minRadius;
+    const theta = Math.random() * (maxAngle - minAngle) + minAngle; // Angle in X-Z plane
+    const phi = ((Math.random() - 0.5) * 0.5 + 0.5) * Math.PI; // Vertical angle
+
+    const x = radius * Math.sin(phi) * Math.cos(theta);
+    const y = radius * Math.cos(phi);
+    const z = radius * Math.sin(phi) * Math.sin(theta);
+
+    // Create an Object3D to compute proper lookAt rotation
+    const dummy = new THREE.Object3D();
+    dummy.position.set(x, y, z);
+    // Make this object look at the origin (0,0,0)
+    dummy.lookAt(0, 0, 0);
+    dummy.rotateY(Math.PI / 2);
+    // Now extract Euler rotation
+    const euler = new THREE.Euler().copy(dummy.rotation);
+
+    return {
+        position: [x, y, z],
+        rotation: [euler.x, euler.y, euler.z] // Face outward from center
+    };
+};
+
+export const GradientText = ({ minRadius = 0, maxRadius = 5, angle = Math.PI * 0.25, color }) => {
+    const selectedPoem = poems[0];
     const getRandomText = (prevText) => {
         let newText;
         do {
@@ -46,101 +63,71 @@ export const GradientText = ({ position, color, alpha, speed }) => {
         } while (newText === prevText);
         return newText;
     };
-    const [rotation, setRotation] = useState(randomRotation())
-
-
+    const { position: initialPosition, rotation: initialRotation } = randomPositionAndRotation(minRadius, maxRadius, -angle, angle);
+    const [rotation, setRotation] = useState(initialRotation);
+    const [position, setPosition] = useState(initialPosition);
+    const [duration, setDuration] = useState(3);
     const [text, setText] = useState(getRandomText(null))
 
     const controls = useControls({
         tiling: { value: 1.0, min: 0.1, max: 5.0, step: 0.1 },
         noiseSpeed: { value: 0.1, min: 0, max: 1.0, step: 0.01 },
-        noiseRange: [0, 1]
+        alpha: { value: 0.2, min: 0, max: 1.0, step: 0.01 },
+        hueShift: { value: 0, min: 0, max: 1.0, step: 0.01 },
+        noiseRange: [0.5, 1],
     });
 
     const material = useMemo(() => {
         const mat = new ColorShiftMaterial({
             color: new THREE.Color(color),
-            alpha,
+            alpha: 1.0,
             side: THREE.DoubleSide,
             tiling: controls.tiling,
             speed: controls.noiseSpeed,
-            screenResolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
+            screenResolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+            ratio: 0.0, // Initialize typing ratio in shader
+            seed: Math.random()
         });
         mat.transparent = true;
         mat.depthWrite = false;
         mat.blending = THREE.NormalBlending; // Ensuring transparency with normal blending
         return mat;
     }, []);
-    const [displayText, setDisplayText] = useState();
-    const [charIndex, setCharIndex] = useState(0);
     const [startTime, setStartTime] = useState(0);
 
-    const [resetScheduled, setResetScheduled] = useState(false);
-    // useEffect(() => {
-    //     let startTime = performance.now();
-    //     let lastIndex = 0;
-    
-    //     const updateText = (elapsedTime) => {
-    //         let index = Math.floor(elapsedTime / speed);
-    //         if (index !== lastIndex && index < text.length) {
-    //             setDisplayText(text.slice(0, index + 1));
-    //             lastIndex = index;
-    //         } else if (index >= text.length) {
-    //             setTimeout(() => {
-    //                 setDisplayText("");
-    //                 setText((prevText) => getRandomText(prevText));
-    //                 setRotation(randomRotation());
-    //                 startTime = performance.now(); // Restart timing
-    //             }, 1000);
-    //         }
-    //     };
-    
-    //     const frameCallback = () => {
-    //         const elapsedTime = performance.now() - startTime;
-    //         updateText(elapsedTime);
-    //     };
-    
-    //     useFrame(frameCallback);
-    
-    //     return () => {
-    //         useFrame(null);
-    //     };
-    // }, [text]);
-
-     useFrame((state) => {
+    useFrame((state) => {
         material.uniforms.tiling.value = controls.tiling;
         material.uniforms.speed.value = controls.noiseSpeed;
         material.uniforms.noiseRange.value = controls.noiseRange;
         material.uniforms.time.value = state.clock.elapsedTime;
+        material.uniforms.alpha.value = controls.alpha;
+        material.uniforms.hshift.value = controls.hueShift;
 
-        if (startTime === 0) setStartTime(state.clock.elapsedTime);
+        if (startTime === 0) setStartTime(state.clock.elapsedTime + THREE.MathUtils.randFloat(0, 3));
         const elapsedTime = state.clock.elapsedTime - startTime;
 
-        const currentIndex = Math.floor(elapsedTime * 1000 / speed);
-        if (currentIndex !== charIndex && currentIndex < text.length) {
-            setDisplayText(text.slice(0, currentIndex + 1));
-            setCharIndex(currentIndex);
-        } else if (currentIndex >= text.length && !resetScheduled) {
-            setResetScheduled(true); // Prevent multiple resets
-            setTimeout(() => {
-                setDisplayText("");
-                setText((prevText) => getRandomText(prevText));
-                setRotation(randomRotation());
-                setCharIndex(0);
-                setStartTime(state.clock.elapsedTime);
-                setResetScheduled(false); // Allow next reset
-            }, 1000);
+        const ratio = Math.min(elapsedTime / duration, 1); // Compute typing ratio
+        material.uniforms.ratio.value = ratio;
+
+        if (ratio >= 1) {
+            setText((prevText) => getRandomText(prevText));
+            const { position: newPosition, rotation: newRotation } = randomPositionAndRotation(minRadius, maxRadius, -angle, angle);
+            setPosition(newPosition);
+            setRotation(newRotation);
+            setDuration(THREE.MathUtils.randFloat(3, 5));
+            setStartTime(state.clock.elapsedTime);
         }
     });
     return (
         <Text
             fontSize={0.5}
+            font="NotoSansJP-Regular.ttf"
             position={position}
             rotation={rotation}
             material={material}
             anchorX="left"
         >
-            {displayText}
+            {text}
         </Text>
     );
 };
