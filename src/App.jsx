@@ -7,6 +7,7 @@ import { GradientText } from "./GradientText";
 import CustomOverlay from "./CustomOverlay";
 import { useRef } from "react";
 import * as THREE from 'three';
+import { GridTexts } from "./GridTexts";
 
 const colors = [
     "#4A90E2"
@@ -31,14 +32,20 @@ export default function App() {
         >
             <color args={ [ '#cccccc' ] } attach="background" />
             <CameraControls makeDefault />
-            {Array.from({ length: 500 }, (_, index) => (
+            {/* {Array.from({ length: 500 }, (_, index) => (
                 <GradientText
                     key={index}
                     text={poems[1][Math.floor(Math.random() * poems[1].length)]}
                     color={colors[index % colors.length]}
                     speed={50 + Math.random() * 100}
                 />
-            ))}
+            ))} */}
+
+
+            <GridTexts
+                color={colors[0]}
+                text={"空は広がり、雲は静かに流れる"}
+            />
             {/* <mesh>
                 <sphereGeometry/>
                 <meshBasicMaterial/>
