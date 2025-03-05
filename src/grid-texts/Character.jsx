@@ -2,10 +2,10 @@ import { Text } from "@react-three/drei";
 import { useEffect, useState, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { CharacterMaterial } from "./CharacterMaterial.js";
+import { CharacterMaterial } from "../CharacterMaterial.js";
 import { useControls } from "leva";
 
-export default function Character({ charData, lifetime = 3, params }) {
+export default function Character({ index, charData, lifetime = 3, params }) {
     const [startTime, setStartTime] = useState(0);
 
     const material = useMemo(() => {
@@ -17,7 +17,7 @@ export default function Character({ charData, lifetime = 3, params }) {
     }, []);
 
     useEffect(() => {
-        setStartTime(performance.now() / 1000 + charData.delay);
+        setStartTime(performance.now() / 1000 + charData.delay * index);
     }, []);
 
     useFrame((state) => {

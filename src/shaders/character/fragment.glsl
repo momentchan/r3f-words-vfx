@@ -27,7 +27,7 @@ void main() {
     vec3 c = remap(nc, vec2(-1.0, 1.0), noiseRange) * fontColor;
     c = HSVShift(c, vec3(seed * hshift, .0, .0));
 
-    float fog = getFog();
+    float fog = getFog(fogDensity);
     c = mix(fogColor, c, fog);
     gl_FragColor = vec4(c, a * fog);
 }

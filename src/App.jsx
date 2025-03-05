@@ -7,7 +7,7 @@ import { GradientText } from "./GradientText";
 import CustomOverlay from "./CustomOverlay";
 import { useRef } from "react";
 import * as THREE from 'three';
-import { GridTexts } from "./GridTexts";
+import { GridTexts } from "./grid-texts/GridTexts";
 import { folder, useControls } from "leva";
 
 const colors = [

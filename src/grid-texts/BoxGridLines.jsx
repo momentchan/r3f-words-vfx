@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { LineSegments, LineBasicMaterial, BufferGeometry, ShaderMaterial } from "three";
+import { BufferGeometry, ShaderMaterial } from "three";
 import { useFrame } from "@react-three/fiber";
-import { useControls } from "leva";
-import fragmentShader from "./shaders/edge/fragment.glsl";
+import fragmentShader from "../shaders/edge/box/fragment.glsl";
 
 const EdgeShaderMaterial = new ShaderMaterial({
     uniforms: {
@@ -11,7 +10,7 @@ const EdgeShaderMaterial = new ShaderMaterial({
         progress: { value: 0 },
         color: { value: new THREE.Color("white") },
         opacity: { value: 1.0 },
-        fogDensity:  { value: 0.0 }
+        fogDensity: { value: 0.0 }
     },
     vertexShader: `
         attribute float edgeProgress;
@@ -54,12 +53,8 @@ function createBoxEdges(box) {
     return geometry;
 }
 
-export const BoxGridLines = ({ subBoxes, params, animationDuration = 0.5 }) => {
+export default function BoxGridLines({ subBoxes, params, animationDuration = 0.5 }) {
     const [progress, setProgress] = useState(0);
-    // const controls = useControls({
-    //     p: { value: 0, min: 0, max: 1, step: 0.1 },
-    // });
-
     useEffect(() => {
         const startTime = performance.now();
         const animate = () => {
