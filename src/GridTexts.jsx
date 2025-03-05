@@ -70,13 +70,16 @@ const getCharacterData = (subBoxes, availableBoxes) => {
 export const GridTexts = ({ text }) => {
     const [characters, setCharacters] = useState([]);
 
-    // UI Controls for partition settings
     const controls = useControls({
+        fontColor: { value: "#4A90E2" },
         exponent: { value: 2, min: 1, max: 5, step: 0.1 },
         minScale: { value: 0.5, min: 0.1, max: 1.0, step: 0.05 },
         maxScale: { value: 1.5, min: 1.0, max: 2.5, step: 0.05 },
         lineColor: { value: "#ffffff" },
-        lineOpacity: { value: 0.3, min: 0, max: 1, step: 0.05 }
+        lineOpacity: { value: 0.3, min: 0, max: 1, step: 0.05 },
+
+        fogColor: { value: "#000000" },
+        fogDensity: { value: 0.001, min: 0.0, max: 0.01, step: 0.001 },
     });
 
     const subBoxes = useMemo(() => {
@@ -93,7 +96,7 @@ export const GridTexts = ({ text }) => {
             if (subBoxes.length < text.length) minSize *= 0.9; // Reduce minSize if not enough boxes
         }
         return subBoxes;
-    }, [text, controls]);
+    }, [text, controls.exponent, controls.minScale, controls.maxScale]);
 
     useEffect(() => {
         const availableBoxes = [...subBoxes];
@@ -107,9 +110,9 @@ export const GridTexts = ({ text }) => {
     return (
         <>
             {characters.map((charData, i) => (
-                <Character key={i} charData={charData} />
+                <Character key={i} charData={charData} params={controls} />
             ))}
-            <BoxGridLines subBoxes={subBoxes} lineColor={controls.lineColor} lineOpacity={controls.lineOpacity} />
+            <BoxGridLines subBoxes={subBoxes} params={controls}  />
         </>
     );
 };

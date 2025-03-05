@@ -5,25 +5,11 @@ import * as THREE from "three";
 import { CharacterMaterial } from "./CharacterMaterial.js";
 import { useControls } from "leva";
 
-export default function Character({ charData, lifetime = 3 }) {
+export default function Character({ charData, lifetime = 3, params }) {
     const [startTime, setStartTime] = useState(0);
 
-    const controls = useControls({
-        color: { value: "#4A90E2" },
-    });
-
-
     const material = useMemo(() => {
-        const mat = new CharacterMaterial({
-            color: new THREE.Color(0.2, 0.0, 0.1),
-            alpha: 1.0,
-            side: THREE.DoubleSide,
-            tiling: 1.0,
-            speed: 1.0,
-            noiseRange: [0, 1],
-            screenResolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-            ratio: 0.0
-        });
+        const mat = new CharacterMaterial();
         mat.transparent = true;
         mat.depthWrite = false;
         mat.blending = THREE.NormalBlending;
@@ -38,12 +24,15 @@ export default function Character({ charData, lifetime = 3 }) {
         const elapsedTime = (performance.now() / 1000) - startTime;
         const ratio = Math.min(elapsedTime / lifetime, 1);
         material.uniforms.ratio.value = ratio;
-        material.uniforms.color.value.set(controls.color);
+        material.uniforms.fontColor.value.set(params.fontColor);
+        material.uniforms.fogColor.value.set(params.fogColor);
         material.uniforms.alpha.value = charData.alpha
+        material.uniforms.fogDensity.value = params.fogDensity
     });
 
     return (
         <Text
+            font="./NotoSansJP-Regular.ttf"
             fontSize={charData.scale} // Randomized size
             position={charData.position}
             rotation={charData.rotation}

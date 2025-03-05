@@ -4,7 +4,8 @@
 #include './../../r3f-gist/shader/cginc/noise/gradientNoise.glsl';
 
 uniform float time;
-uniform vec3 color;
+uniform vec3 fontColor;
+uniform vec3 fogColor;
 uniform float alpha;
 uniform float tiling;
 uniform vec2 noiseRange;
@@ -23,7 +24,7 @@ void main() {
 
     float fade = smoothstep(ratio + 0.1, ratio, vUv.x) * smoothstep(0.0, 0.1, ratio) * smoothstep(1.0, 0.9, ratio); 
     float a = alpha * na * fade;
-    vec3 c = remap(nc, vec2(-1.0,1.0), noiseRange) * color;
+    vec3 c = remap(nc, vec2(-1.0,1.0), noiseRange) * fontColor;
     c = HSVShift(c, vec3(seed *hshift, .0,.0));
     gl_FragColor = vec4(c, a);
 }

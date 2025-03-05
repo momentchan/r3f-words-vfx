@@ -6,7 +6,8 @@ import vertexShader from "./shaders/text/vertex.glsl";
 const CharacterMaterial = shaderMaterial(
     {
         time: 0,
-        color: new THREE.Color(0.2, 0.0, 0.1),
+        fontColor: new THREE.Color(0.2, 0.0, 0.1),
+        fogColor: new THREE.Color(0.2, 0.0, 0.1),
         alpha: 1.0,
         side: THREE.DoubleSide,
         tiling: 1.0,
@@ -16,6 +17,7 @@ const CharacterMaterial = shaderMaterial(
         ratio: 0.0, // Ratio for text fade-in effect
         seed: Math.random(),
         hshift: 0,
+        fogDensity: 0.0,
     },
     vertexShader,
     fragmentShader
