@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import Character from "./Character";
 import { MathUtils } from "three";
-import { useControls } from "leva";
+import { folder, useControls } from "leva";
 import BoxGridLines from "./BoxGridLines";
 import PartitionGridLines from "./PartitionGridLines";
+import Boxes from "./Boxes";
 
 // Example 3D Binary Space Partitioning for a 10x10x10 box
 // Returns array of sub-boxes { x, y, z, width, height, depth }
@@ -170,15 +171,15 @@ export const GridTexts = ({ text }) => {
   const [characters, setCharacters] = useState([]);
 
   const controls = useControls({
-    fontColor: { value: "#4A90E2" },
-    exponent: { value: 2, min: 1, max: 5, step: 0.1 },
-    minScale: { value: 0.5, min: 0.1, max: 1.0, step: 0.05 },
-    maxScale: { value: 1.5, min: 1.0, max: 2.5, step: 0.05 },
-    lineColor: { value: "#ffffff" },
-    lineOpacity: { value: 0.3, min: 0, max: 1, step: 0.05 },
-
-    fogColor: { value: "#000000" },
-    fogDensity: { value: 0.001, min: 0.0, max: 0.01, step: 0.001 },
+    'Line': folder({
+      exponent: { value: 2, min: 1, max: 5, step: 0.1 },
+      minScale: { value: 0.5, min: 0.1, max: 1.0, step: 0.05 },
+      maxScale: { value: 1.5, min: 1.0, max: 2.5, step: 0.05 },
+      lineColor: { value: "#ffffff" },
+      lineOpacity: { value: 0.3, min: 0, max: 1, step: 0.05 },
+      fogColor: { value: "#000000" },
+      fogDensity: { value: 0.001, min: 0.0, max: 0.01, step: 0.001 },
+    })
   });
 
   const { results: subBoxes, partitionLines } = useMemo(() => {
@@ -212,8 +213,9 @@ export const GridTexts = ({ text }) => {
       {characters.map((charData, i) => (
         <Character key={i} charData={charData} index={i} params={controls} />
       ))}
-      {/* <BoxGridLines subBoxes={subBoxes} params={controls} /> */}
-      <PartitionGridLines partitionLines={partitionLines} params={controls} />
+      <BoxGridLines subBoxes={subBoxes} params={controls} />
+      {/* <PartitionGridLines partitionLines={partitionLines} params={controls} /> */}
+      <Boxes subBoxes={subBoxes}/>
     </>
   );
 };
