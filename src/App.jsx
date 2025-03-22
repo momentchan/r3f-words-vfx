@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { GridTexts } from "./grid-texts/GridTexts";
 import { folder, useControls } from "leva";
 import { BlendFunction } from 'postprocessing'
-import Side from "./Side";
+import Side from "./grid-texts/Side";
 import Effect from "./Effect";
 
 
@@ -19,9 +19,10 @@ export default function App() {
             bgColor: '#cccccc'
         })
     })
-    
+
     return (
         <Canvas
+            // dpr={1}
             shadows
             camera={{
                 fov: 45,
@@ -44,8 +45,8 @@ export default function App() {
                 text={"青春是一個夢人生如一陣春風"}
             />
 
-            <Effect/>
-           
+            <Effect />
+
             <Utilities />
         </Canvas>
     );

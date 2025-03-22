@@ -15,7 +15,7 @@ export default function Effect() {
                     offset={[0.01, 0.01]} // color offset
                 /> */}
             {/* <Noise opaciy={0.02}/> */}
-            {/* <Bloom intensity={1} luminanceThreshold={0.5} luminanceSmoothing={0.2} /> */}
+            <Bloom intensity={5} luminanceThreshold={.8} luminanceSmoothing={1} />
         </EffectComposer>
     </>
 }

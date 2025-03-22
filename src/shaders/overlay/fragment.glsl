@@ -4,7 +4,7 @@
 
 void mainImage(const in vec4 inputColor, in vec2 uv, out vec4 outputColor) {
     // outputColor = vec4(uv, .0, 1.0);
-    float n = remap(noise(uv), vec2(0.0, 1.0), vec2(0.8, 1.0));
+    float n = remap(noise(uv), vec2(0.0, 1.0), vec2(0.9, 1.0));
 
 
 
