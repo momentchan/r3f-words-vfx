@@ -213,8 +213,8 @@ export const GridTexts = ({ text }) => {
       {characters.map((charData, i) => (
         <Character key={i} charData={charData} index={i} params={controls} />
       ))}
-      <BoxGridLines subBoxes={subBoxes} params={controls} />
-      {/* <PartitionGridLines partitionLines={partitionLines} params={controls} /> */}
+      {/* <BoxGridLines subBoxes={subBoxes} params={controls} /> */}
+      <PartitionGridLines partitionLines={partitionLines} params={controls} />
       <Boxes subBoxes={subBoxes}/>
     </>
   );
