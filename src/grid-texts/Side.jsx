@@ -8,8 +8,9 @@ import fragmentShader from "../shaders/room/fragment.glsl";
 import vertexShader from "../shaders/room/vertex.glsl";
 import { patchShaders } from "gl-noise";
 import { useControls } from "leva";
+import ObjectMat from "./ObjectMat";
 
-export default function Side({ bg = '#f0f0f0', children, index, scale }) {
+export default function Side({ bg = '#f0f0f0', index, scale, geometry }) {
     const shape = useRef()
     const { nodes } = useGLTF('aobox-transformed-uv.glb')
 
@@ -86,15 +87,17 @@ export default function Side({ bg = '#f0f0f0', children, index, scale }) {
                     />
                     <directionalLight ref={lightRef} castShadow position={[20, 5, 5]} intensity={2.} />
                 </mesh>
-                {/* <spotLight ref={lightRef} castShadow color={bg} intensity={2000} position={[10, 20, 10]} angle={0.15} shadow-normalBias={0.05} shadow-bias={0.0001} /> */}
             </group>
 
-
             {/* The Shape */}
-            <mesh castShadow receiveShadow ref={shape} scale={[s, s, s]}>
-                {children}
-                <meshLambertMaterial color={bg} />
-            </mesh>
+            <group ref={shape} scale={[s, s, s]} >
+                <mesh castShadow receiveShadow  geometry={geometry}>
+                    <ObjectMat />
+                </mesh>
+                <lineSegments  geometry={new THREE.EdgesGeometry(geometry)}>
+                    <lineBasicMaterial attach="material" color="white" linewidth={1} />
+                </lineSegments>
+            </group>
         </MeshPortalMaterial>
 
     )

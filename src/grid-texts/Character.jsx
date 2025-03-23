@@ -24,6 +24,7 @@ export default function Character({ index, charData, lifetime = 3, params }) {
         mat.blending = THREE.NormalBlending;
         return mat;
     }, []);
+    
 
     useEffect(() => {
         setStartTime(performance.now() / 1000 + charData.delay * index);

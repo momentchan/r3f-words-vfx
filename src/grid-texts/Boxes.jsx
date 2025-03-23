@@ -66,6 +66,8 @@ export default function Boxes({ subBoxes, numBoxes = 6 }) {
         });
     }, [randomBoxIndices, subBoxes]);
 
+    const bg = new THREE.BoxGeometry(1.15, 1.15, 1.15);
+    
     return (
         <>
             {subBoxes.map((box, i) => {
@@ -85,8 +87,8 @@ export default function Boxes({ subBoxes, numBoxes = 6 }) {
                                             key={faceIndex}
                                             index={faceIndex}
                                             scale={[box.width * 0.5, box.height * 0.5, box.depth * 0.5]}
+                                            geometry={bg}
                                         >
-                                            <boxGeometry args={[1.15, 1.15, 1.15]} />
                                         </Side>
                                     );
                                 }
