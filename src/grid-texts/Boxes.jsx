@@ -66,7 +66,8 @@ export default function Boxes({ subBoxes, numBoxes = 6 }) {
         });
     }, [randomBoxIndices, subBoxes]);
 
-    const bg = new THREE.BoxGeometry(1.15, 1.15, 1.15);
+    const bg = new THREE.SphereGeometry(1);
+    // const bg = new THREE.BoxGeometry(1.15, 1.15, 1.15);
     
     return (
         <>
@@ -93,7 +94,7 @@ export default function Boxes({ subBoxes, numBoxes = 6 }) {
                                     );
                                 }
 
-                                const randomOpacity = Math.random() > 0.7 ? Math.random() * 0.1 : 0;
+                                const randomOpacity = 0//Math.random() > 0.7 ? Math.random() * 0.1 : 0;
 
                                 return (
                                     <meshBasicMaterial

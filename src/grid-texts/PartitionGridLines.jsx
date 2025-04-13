@@ -1,33 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import fragmentShader from "../shaders/edge/partition/fragment.glsl";
-
-/**
- * Single shared ShaderMaterial with an "animatedProgress" attribute
- * so we can fade lines individually in the GPU based on per-vertex data
- */
-const SharedLineMaterial = new THREE.ShaderMaterial({
-  uniforms: {
-    color: { value: new THREE.Color("white") },
-    opacity: { value: 1.0 },
-    fogDensity: { value: 0.0 },
-  },
-  vertexShader: `
-    attribute float animatedProgress; // 0..1 for fade
-    attribute float edge;
-    varying float vProgress;
-    varying float vEdge;
-
-    void main() {
-      vEdge = edge;
-      vProgress = animatedProgress;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader,
-  transparent: true
-});
+import { CustomShaderMaterial } from "../r3f-gist/shader/CustomShaderMaterial";
 
 /**
  * Combine bounding box lines + partition lines into a single array of {start, end}.
@@ -141,6 +116,8 @@ export default function PartitionGridLines({
   // track line states => array of {spawnTime, isActive}
   const [lineStates, setLineStates] = useState([]);
 
+  const mat = useRef()
+
   // We'll spawn lines in an interval
   useEffect(() => {
     let i = 0;
@@ -166,9 +143,9 @@ export default function PartitionGridLines({
   // We'll update the "animatedProgress" attribute each frame
   useFrame(() => {
     // update uniform
-    SharedLineMaterial.uniforms.color.value.set(params.lineColor);
-    SharedLineMaterial.uniforms.opacity.value = params.lineOpacity;
-    SharedLineMaterial.uniforms.fogDensity.value = params.fogDensity;
+    // mat.uniforms.color.value.set(params.lineColor);
+    mat.current.uniforms.opacity.value = params.lineOpacity;
+    mat.current.uniforms.fogDensity.value = params.fogDensity;
 
     // get the typed arrays from geometry
     const animAttr = geometry.getAttribute("animatedProgress");
@@ -193,7 +170,30 @@ export default function PartitionGridLines({
   return (
     <lineSegments>
       <primitive attach="geometry" object={geometry} />
-      <primitive attach="material" object={SharedLineMaterial} />
+      {/* <primitive attach="material" object={SharedLineMaterial} /> */}
+      <CustomShaderMaterial
+        ref={mat}
+        transparent={true}
+        vertexShader={`
+            attribute float animatedProgress; // 0..1 for fade
+            attribute float edge;
+            varying float vProgress;
+            varying float vEdge;
+
+            void main() {
+              vEdge = edge;
+              vProgress = animatedProgress;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+        fragmentShader={fragmentShader}
+        uniforms={{
+          color: { value: new THREE.Color("white") },
+          opacity: { value: 1.0 },
+          fogDensity: { value: 0.0 },
+        }}
+
+      />
     </lineSegments>
   );
 }

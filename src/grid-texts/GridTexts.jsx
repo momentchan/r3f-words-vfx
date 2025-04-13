@@ -144,10 +144,6 @@ function partitionBox(
   return { results, partitionLines };
 }
 
-
-
-
-
 const getCharacterData = (subBoxes, availableBoxes) => {
   // Place character at the center of its sub-box
   if (availableBoxes.length === 0) return null;

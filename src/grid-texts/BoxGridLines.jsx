@@ -1,28 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { BufferGeometry, ShaderMaterial } from "three";
 import { useFrame } from "@react-three/fiber";
 import fragmentShader from "../shaders/edge/box/fragment.glsl";
-
-const EdgeShaderMaterial = new ShaderMaterial({
-    uniforms: {
-        time: { value: 0 },
-        progress: { value: 0 },
-        color: { value: new THREE.Color("white") },
-        opacity: { value: 1.0 },
-        fogDensity: { value: 0.0 }
-    },
-    vertexShader: `
-        attribute float edgeProgress;
-        varying float vEdgeProgress;
-        void main() {
-            vEdgeProgress = edgeProgress;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-    fragmentShader,
-    transparent: true
-});
+import { CustomShaderMaterial } from "../r3f-gist/shader/CustomShaderMaterial";
 
 function createBoxEdges(box) {
     const vertices = [];
@@ -55,6 +36,34 @@ function createBoxEdges(box) {
 
 export default function BoxGridLines({ subBoxes, params, animationDuration = 0.5 }) {
     const [progress, setProgress] = useState(0);
+
+    const mat = useRef()
+
+    const CustomMat = useMemo(() => (
+        <CustomShaderMaterial
+            ref={mat}
+            attach="material"
+            vertexShader={`
+            attribute float edgeProgress;
+            varying float vEdgeProgress;
+            void main() {
+                vEdgeProgress = edgeProgress;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `}
+            fragmentShader={fragmentShader}
+            uniforms={{
+                time: { value: 0 },
+                progress: { value: 0 },
+                color: { value: new THREE.Color("white") },
+                opacity: { value: 1.0 },
+                fogDensity: { value: 0.0 }
+            }}
+            transparent
+        />
+    ), []) // memoize to avoid re-rendering
+
+
     useEffect(() => {
         const startTime = performance.now();
         const animate = () => {
@@ -68,10 +77,10 @@ export default function BoxGridLines({ subBoxes, params, animationDuration = 0.5
     }, [subBoxes, animationDuration]);
 
     useFrame(() => {
-        EdgeShaderMaterial.uniforms.progress.value = progress;
-        EdgeShaderMaterial.uniforms.color.value.set(params.lineColor);
-        EdgeShaderMaterial.uniforms.opacity.value = params.lineOpacity;
-        EdgeShaderMaterial.uniforms.fogDensity.value = params.fogDensity
+        mat.current.uniforms.progress.value = progress;
+        mat.current.uniforms.color.value.set(params.lineColor);
+        mat.current.uniforms.opacity.value = params.lineOpacity;
+        mat.current.uniforms.fogDensity.value = params.fogDensity
     });
 
     return (
@@ -79,7 +88,7 @@ export default function BoxGridLines({ subBoxes, params, animationDuration = 0.5
             {subBoxes.map((box, i) => (
                 <lineSegments key={i} position={[box.x - 5 + box.width / 2, box.y - 5 + box.height / 2, box.z - 5 + box.depth / 2]}>
                     <primitive attach="geometry" object={createBoxEdges([box.width, box.height, box.depth])} />
-                    <primitive attach="material" object={EdgeShaderMaterial} />
+                    {CustomMat}
                 </lineSegments>
             ))}
         </>

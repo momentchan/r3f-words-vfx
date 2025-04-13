@@ -9,5 +9,5 @@ void main() {
     v = clamp(v, 0., 1.);
     vec3 col = vec3(1.);
 
-    csm_DiffuseColor = vec4(col, .0);
+    csm_DiffuseColor = vec4(col, .5);
 }
