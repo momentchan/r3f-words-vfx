@@ -58,12 +58,12 @@ export default function Side({ bg = '#f0f0f0', index, scale, geometry }) {
     }, [index])
 
     return (
-        <MeshPortalMaterial worldUnits={false} attach={`material-${index}`}>
+        <MeshPortalMaterial worldUnits={false} attach={`material-${index}`} blend={0}>
 
             {/* Everything here is inside the portal and isolated from the canvas */}
             <ambientLight intensity={0.5} />
             <Environment preset="city" />
-            <Sky distance={450000} sunPosition={[0, 1, 0]} inclination={0} azimuth={0.25} />
+            {/* <Sky distance={450000} sunPosition={[-1, 0.2, 0]} inclination={0.1} azimuth={0.75} /> */}
 
             {/** A box with baked AO */}
             <group scale={scale} >

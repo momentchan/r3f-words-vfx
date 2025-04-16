@@ -29,5 +29,7 @@ void main() {
 
     float fog = getFog(fogDensity);
     c = mix(fogColor, c, fog);
+
+
     gl_FragColor = vec4(c, a * fog);
 }

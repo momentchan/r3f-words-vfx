@@ -2,14 +2,14 @@ import * as THREE from "three";
 import Side from "./Side";
 import { useMemo } from "react";
 
-export default function Boxes({ subBoxes, numBoxes = 6 }) {
+export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
     const parentBounds = {
         minX: -5, maxX: 5,
         minY: -5, maxY: 5,
         minZ: -5, maxZ: 5,
     };
 
-    // Function to check if a box face is outermost
+    // Function to check if a box face is outermost and calculate its area
     function getOutermostFaces(box) {
         const { x, y, z, width, height, depth } = box;
         const center = new THREE.Vector3(x - 5, y - 5, z - 5);
@@ -22,26 +22,28 @@ export default function Boxes({ subBoxes, numBoxes = 6 }) {
         const z_max = center.z + depth;
 
         return {
-            right: x_max >= parentBounds.maxX,
-            left: x_min <= parentBounds.minX,
-            top: y_max >= parentBounds.maxY,
-            bottom: y_min <= parentBounds.minY,
-            front: z_max >= parentBounds.maxZ,
-            back: z_min <= parentBounds.minZ,
+            right: { isOuter: x_max >= parentBounds.maxX, area: height * depth },
+            left: { isOuter: x_min <= parentBounds.minX, area: height * depth },
+            top: { isOuter: y_max >= parentBounds.maxY, area: width * depth },
+            bottom: { isOuter: y_min <= parentBounds.minY, area: width * depth },
+            front: { isOuter: z_max >= parentBounds.maxZ, area: width * height },
+            back: { isOuter: z_min <= parentBounds.minZ, area: width * height },
         };
     }
 
-    // Pick `numBoxes` random boxes that have at least one outer face
+    // Pick `numBoxes` random boxes that have at least one valid outer face
     const randomBoxIndices = useMemo(() => {
         const outerBoxes = subBoxes
             .map((box, index) => ({ box, index }))
-            .filter(({ box }) => Object.values(getOutermostFaces(box)).some(face => face));
+            .filter(({ box }) =>
+                Object.values(getOutermostFaces(box)).some(face => face.isOuter && face.area >= minFaceArea)
+            );
 
         if (outerBoxes.length === 0) return [];
 
         const shuffled = [...outerBoxes].sort(() => Math.random() - 0.5); // Shuffle for randomness
         return shuffled.slice(0, numBoxes).map(({ index }) => index);
-    }, [subBoxes, numBoxes]);
+    }, [subBoxes, numBoxes, minFaceArea]);
 
     // Track used faces to avoid duplicates
     const usedFaces = useMemo(() => new Set(), [randomBoxIndices]);
@@ -50,7 +52,9 @@ export default function Boxes({ subBoxes, numBoxes = 6 }) {
     const randomOuterFaces = useMemo(() => {
         return randomBoxIndices.map(boxIndex => {
             const outerFaces = getOutermostFaces(subBoxes[boxIndex]);
-            const faceIndices = Object.keys(outerFaces).filter(face => outerFaces[face]); // Only valid outer faces
+            const faceIndices = Object.keys(outerFaces).filter(
+                face => outerFaces[face].isOuter && outerFaces[face].area >= minFaceArea // Only valid outer faces
+            );
 
             // Pick a face that hasn't been used
             let selectedFace = null;
@@ -64,11 +68,11 @@ export default function Boxes({ subBoxes, numBoxes = 6 }) {
 
             return selectedFace;
         });
-    }, [randomBoxIndices, subBoxes]);
+    }, [randomBoxIndices, subBoxes, minFaceArea]);
 
     const bg = new THREE.SphereGeometry(1);
     // const bg = new THREE.BoxGeometry(1.15, 1.15, 1.15);
-    
+
     return (
         <>
             {subBoxes.map((box, i) => {
@@ -94,7 +98,7 @@ export default function Boxes({ subBoxes, numBoxes = 6 }) {
                                     );
                                 }
 
-                                const randomOpacity = 0//Math.random() > 0.7 ? Math.random() * 0.1 : 0;
+                                const randomOpacity = 0; // Math.random() > 0.7 ? Math.random() * 0.1 : 0;
 
                                 return (
                                     <meshBasicMaterial

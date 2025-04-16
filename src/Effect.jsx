@@ -16,7 +16,7 @@ export default function Effect() {
                 /> */}
             {/* <Noise opaciy={0.02}/> */}
             <FXAA/>
-            <Bloom intensity={5} luminanceThreshold={.8} luminanceSmoothing={1} />
+            {/* <Bloom intensity={5} luminanceThreshold={.8} luminanceSmoothing={1} /> */}
         </EffectComposer>
     </>
 }
