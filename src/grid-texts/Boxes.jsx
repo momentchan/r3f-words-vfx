@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import Side from "./Side";
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
+import { useThree } from "@react-three/fiber";
 
 export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
     const parentBounds = {
@@ -8,6 +9,17 @@ export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
         minY: -5, maxY: 5,
         minZ: -5, maxZ: 5,
     };
+
+    const [clickedBoxes, setClickedBoxes] = useState(new Set());
+    const [clickedFaces, setClickedFaces] = useState(new Map());
+    const [canToggle, setCanToggle] = useState(false);
+    const [hoveredBox, setHoveredBox] = useState(null);
+    const [hoveredFace, setHoveredFace] = useState(null);
+    
+    const meshRefs = useRef([]);
+    const { camera } = useThree();
+    const raycaster = new THREE.Raycaster();
+    const clickTimeoutRef = useRef(null);
 
     // Function to check if a box face is outermost and calculate its area
     function getOutermostFaces(box) {
@@ -30,75 +42,156 @@ export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
             back: { isOuter: z_min <= parentBounds.minZ, area: width * height },
         };
     }
-
-    // Pick `numBoxes` random boxes that have at least one valid outer face
-    const randomBoxIndices = useMemo(() => {
-        const outerBoxes = subBoxes
-            .map((box, index) => ({ box, index }))
-            .filter(({ box }) =>
-                Object.values(getOutermostFaces(box)).some(face => face.isOuter && face.area >= minFaceArea)
-            );
-
-        if (outerBoxes.length === 0) return [];
-
-        const shuffled = [...outerBoxes].sort(() => Math.random() - 0.5); // Shuffle for randomness
-        return shuffled.slice(0, numBoxes).map(({ index }) => index);
-    }, [subBoxes, numBoxes, minFaceArea]);
-
-    // Track used faces to avoid duplicates
-    const usedFaces = useMemo(() => new Set(), [randomBoxIndices]);
-
-    // Store exactly one unique outer face for each selected box
-    const randomOuterFaces = useMemo(() => {
-        return randomBoxIndices.map(boxIndex => {
-            const outerFaces = getOutermostFaces(subBoxes[boxIndex]);
-            const faceIndices = Object.keys(outerFaces).filter(
-                face => outerFaces[face].isOuter && outerFaces[face].area >= minFaceArea // Only valid outer faces
-            );
-
-            // Pick a face that hasn't been used
-            let selectedFace = null;
-            for (let face of faceIndices.sort(() => Math.random() - 0.5)) {
-                if (!usedFaces.has(face)) {
-                    selectedFace = face;
-                    usedFaces.add(face);
-                    break;
-                }
-            }
-
-            return selectedFace;
-        });
-    }, [randomBoxIndices, subBoxes, minFaceArea]);
-
     const bg = new THREE.SphereGeometry(1);
-    // const bg = new THREE.BoxGeometry(1.15, 1.15, 1.15);
+
+    // Add helper function to check if face is valid
+    const isValidFace = (outerFaces, face) => {
+        return outerFaces[face].isOuter;
+    };
+
+    // Handle click for toggling
+    const onPointerDown = (event) => {
+        event.stopPropagation();  // Stop event bubbling
+        
+        // Prevent multiple rapid clicks
+        if (clickTimeoutRef.current) return;
+        
+        clickTimeoutRef.current = setTimeout(() => {
+            clickTimeoutRef.current = null;
+        }, 200); // 200ms debounce
+
+        const mouse = new THREE.Vector2(
+            (event.clientX / window.innerWidth) * 2 - 1,
+            -(event.clientY / window.innerHeight) * 2 + 1
+        );
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(
+            meshRefs.current.filter(Boolean)
+        );
+
+        if (!intersects.length) return;
+
+        const hit = intersects[0];
+        const boxIndex = hit.object.userData.boxIndex;
+        const faceIndex = Math.floor(hit.faceIndex / 2);
+        const face = Object.keys(getOutermostFaces(subBoxes[boxIndex]))[faceIndex];
+        const outerFaces = getOutermostFaces(subBoxes[boxIndex]);
+
+        if (isValidFace(outerFaces, face)) {
+            // Handle both states together to maintain consistency
+            if (clickedFaces.get(boxIndex) === face) {
+                // If clicking the same face, remove both box and face
+                setClickedBoxes(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(boxIndex);
+                    return newSet;
+                });
+                setClickedFaces(prev => {
+                    const newMap = new Map(prev);
+                    newMap.delete(boxIndex);
+                    return newMap;
+                });
+            } else {
+                // If clicking a different face or new box, update both
+                setClickedBoxes(prev => {
+                    const newSet = new Set(prev);
+                    newSet.add(boxIndex);
+                    return newSet;
+                });
+                setClickedFaces(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(boxIndex, face);
+                    return newMap;
+                });
+            }
+        }
+    };
+
+    // Add pointer move handler to check if face can be toggled
+    const onPointerMove = (event) => {
+        const mouse = new THREE.Vector2(
+            (event.clientX / window.innerWidth) * 2 - 1,
+            -(event.clientY / window.innerHeight) * 2 + 1
+        );
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(
+            meshRefs.current.filter(Boolean)
+        );
+
+        if (!intersects.length) {
+            setHoveredBox(null);
+            setHoveredFace(null);
+            setCanToggle(false);
+            return;
+        }
+
+        const hit = intersects[0];
+        const boxIndex = hit.object.userData.boxIndex;
+        const faceIndex = Math.floor(hit.faceIndex / 2);
+        const face = Object.keys(getOutermostFaces(subBoxes[boxIndex]))[faceIndex];
+        const outerFaces = getOutermostFaces(subBoxes[boxIndex]);
+
+        if (isValidFace(outerFaces, face)) {
+            setHoveredBox(boxIndex);
+            setHoveredFace(face);
+            setCanToggle(true);
+        } else {
+            setHoveredBox(null);
+            setHoveredFace(null);
+            setCanToggle(false);
+        }
+    };
+
+    // Add pointer leave handler to reset cursor
+    const onPointerLeave = () => {
+        setHoveredBox(null);
+        setHoveredFace(null);
+        setCanToggle(false);
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (clickTimeoutRef.current) {
+                clearTimeout(clickTimeoutRef.current);
+            }
+        };
+    }, []);
 
     return (
-        <>
+        <group 
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerLeave={onPointerLeave}
+        >
             {subBoxes.map((box, i) => {
                 const outerFaces = getOutermostFaces(box);
-                const selectedFace = randomBoxIndices.includes(i)
-                    ? randomOuterFaces[randomBoxIndices.indexOf(i)]
-                    : null;
+                const isClicked = clickedBoxes.has(i);
+                const selectedFace = clickedFaces.get(i);
+                const isHovered = hoveredBox === i;
 
                 return (
                     <group key={i} position={[box.x - 5 + box.width / 2, box.y - 5 + box.height / 2, box.z - 5 + box.depth / 2]}>
-                        <mesh>
+                        <mesh
+                            ref={(el) => {
+                                meshRefs.current[i] = el;
+                                if (el) el.userData.boxIndex = i;
+                            }}
+                        >
                             <boxGeometry args={[box.width, box.height, box.depth]} />
                             {Object.keys(outerFaces).map((face, faceIndex) => {
-                                if (selectedFace === face) {
+                                if (selectedFace === face && isClicked) {
                                     return (
                                         <Side
                                             key={faceIndex}
                                             index={faceIndex}
                                             scale={[box.width * 0.5, box.height * 0.5, box.depth * 0.5]}
                                             geometry={bg}
-                                        >
-                                        </Side>
+                                        />
                                     );
                                 }
-
-                                const randomOpacity = 0; // Math.random() > 0.7 ? Math.random() * 0.1 : 0;
 
                                 return (
                                     <meshBasicMaterial
@@ -107,7 +200,7 @@ export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
                                         color={"white"}
                                         transparent
                                         depthWrite={false}
-                                        opacity={randomOpacity}
+                                        opacity={isHovered && hoveredFace === face ? 0.1 : 0}
                                         side={THREE.DoubleSide}
                                     />
                                 );
@@ -116,6 +209,6 @@ export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
                     </group>
                 );
             })}
-        </>
+        </group>
     );
 }

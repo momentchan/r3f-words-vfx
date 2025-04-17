@@ -28,7 +28,7 @@ export default function App() {
             linear // Ensures proper color rendering
         >
             {/* Scene settings */}
-            <fogExp2 attach="fog" args={['#ffffff', 0.2]} />
+            <fogExp2 attach="fog" args={['#ffffff', 0.1]} />
             <color args={[bgColor]} attach="background" />
 
             {/* Camera controls */}
