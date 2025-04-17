@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import Side from "./Side";
+import Portal from './Portal'
 import { useMemo, useRef, useState, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 
@@ -184,7 +184,7 @@ export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
                             {Object.keys(outerFaces).map((face, faceIndex) => {
                                 if (selectedFace === face && isClicked) {
                                     return (
-                                        <Side
+                                        <Portal
                                             key={faceIndex}
                                             index={faceIndex}
                                             scale={[box.width * 0.5, box.height * 0.5, box.depth * 0.5]}
