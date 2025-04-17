@@ -1,6 +1,7 @@
 import { MeshPortalMaterial } from "@react-three/drei";
 import { useMemo } from "react";
 import PortalContent from "./PortalContent";
+import PortalContent2 from "./PortalContent2";
 
 export default function Portal({ index, scale, geometry }) {
     const rotation = useMemo(() => {
@@ -16,7 +17,7 @@ export default function Portal({ index, scale, geometry }) {
 
     return (
         <MeshPortalMaterial worldUnits={false} attach={`material-${index}`} blend={0}>
-            <PortalContent scale={scale} geometry={geometry} rotation={rotation} />
+            <PortalContent2 scale={scale} geometry={geometry} rotation={rotation} />
         </MeshPortalMaterial>
     )
 }
