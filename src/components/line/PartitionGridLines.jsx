@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import fragmentShader from "../shaders/edge/partition/fragment.glsl";
-import { CustomShaderMaterial } from "../r3f-gist/shader/CustomShaderMaterial";
+import fragmentShader from "../../shaders/edge/partition/fragment.glsl";
+import { CustomShaderMaterial } from "../../r3f-gist/shader/CustomShaderMaterial";
 
 /**
  * Combine bounding box lines + partition lines into a single array of {start, end}.

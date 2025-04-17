@@ -1,5 +1,5 @@
-import CustomEffectBase from "./r3f-gist/effect/CustomEffectBase";
-import fragmentShader from './shaders/overlay/fragment.glsl'
+import CustomEffectBase from "../r3f-gist/effect/CustomEffectBase";
+import fragmentShader from '../shaders/overlay/fragment.glsl'
 
 
 class OverlayEffect extends CustomEffectBase {

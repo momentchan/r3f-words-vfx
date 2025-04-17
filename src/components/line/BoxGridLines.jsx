@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { BufferGeometry, ShaderMaterial } from "three";
 import { useFrame } from "@react-three/fiber";
 import fragmentShader from "../shaders/edge/box/fragment.glsl";
-import { CustomShaderMaterial } from "../r3f-gist/shader/CustomShaderMaterial";
+import { CustomShaderMaterial } from "../../r3f-gist/shader/CustomShaderMaterial";
 
 function createBoxEdges(box) {
     const vertices = [];

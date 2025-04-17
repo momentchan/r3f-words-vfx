@@ -3,9 +3,9 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { folder, useControls } from "leva";
-import fragmentShader from "../shaders/character/fragment.glsl";
-import vertexShader from "../shaders/text/vertex.glsl";
-import { CustomShaderMaterial } from "../r3f-gist/shader/CustomShaderMaterial";
+import fragmentShader from "../../shaders/character/fragment.glsl";
+import vertexShader from "../../shaders/text/vertex.glsl";
+import { CustomShaderMaterial } from "../../r3f-gist/shader/CustomShaderMaterial";
 
 export default function Character({ index, charData, lifetime = 3, params }) {
     const [startTime, setStartTime] = useState(0);

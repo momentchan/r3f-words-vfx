@@ -1,53 +1,20 @@
 import * as THREE from "three";
-import Portal from './Portal'
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
+import BoxMesh from "./BoxMesh";
+import { isValidFace, getOutermostFaces } from "../../utils/boxUtils";
 
-export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
-    const parentBounds = {
-        minX: -5, maxX: 5,
-        minY: -5, maxY: 5,
-        minZ: -5, maxZ: 5,
-    };
-
+export default function Boxes({ subBoxes }) {
     const [clickedBoxes, setClickedBoxes] = useState(new Set());
     const [clickedFaces, setClickedFaces] = useState(new Map());
-    const [canToggle, setCanToggle] = useState(false);
     const [hoveredBox, setHoveredBox] = useState(null);
     const [hoveredFace, setHoveredFace] = useState(null);
-    
+        
     const meshRefs = useRef([]);
     const { camera } = useThree();
     const raycaster = new THREE.Raycaster();
     const clickTimeoutRef = useRef(null);
-
-    // Function to check if a box face is outermost and calculate its area
-    function getOutermostFaces(box) {
-        const { x, y, z, width, height, depth } = box;
-        const center = new THREE.Vector3(x - 5, y - 5, z - 5);
-
-        const x_min = center.x;
-        const x_max = center.x + width;
-        const y_min = center.y;
-        const y_max = center.y + height;
-        const z_min = center.z;
-        const z_max = center.z + depth;
-
-        return {
-            right: { isOuter: x_max >= parentBounds.maxX, area: height * depth },
-            left: { isOuter: x_min <= parentBounds.minX, area: height * depth },
-            top: { isOuter: y_max >= parentBounds.maxY, area: width * depth },
-            bottom: { isOuter: y_min <= parentBounds.minY, area: width * depth },
-            front: { isOuter: z_max >= parentBounds.maxZ, area: width * height },
-            back: { isOuter: z_min <= parentBounds.minZ, area: width * height },
-        };
-    }
     const bg = new THREE.SphereGeometry(1);
-
-    // Add helper function to check if face is valid
-    const isValidFace = (outerFaces, face) => {
-        return outerFaces[face].isOuter;
-    };
 
     // Handle click for toggling
     const onPointerDown = (event) => {
@@ -123,8 +90,7 @@ export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
         if (!intersects.length) {
             setHoveredBox(null);
             setHoveredFace(null);
-            setCanToggle(false);
-            return;
+                        return;
         }
 
         const hit = intersects[0];
@@ -136,19 +102,16 @@ export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
         if (isValidFace(outerFaces, face)) {
             setHoveredBox(boxIndex);
             setHoveredFace(face);
-            setCanToggle(true);
-        } else {
+                    } else {
             setHoveredBox(null);
             setHoveredFace(null);
-            setCanToggle(false);
-        }
+                    }
     };
 
     // Add pointer leave handler to reset cursor
     const onPointerLeave = () => {
         setHoveredBox(null);
         setHoveredFace(null);
-        setCanToggle(false);
     };
 
     // Cleanup timeout on unmount
@@ -160,55 +123,29 @@ export default function Boxes({ subBoxes, numBoxes = 6, minFaceArea = 0.5 }) {
         };
     }, []);
 
+    const handleMeshRef = (el, index) => {
+        meshRefs.current[index] = el;
+    };
+
     return (
         <group 
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerLeave={onPointerLeave}
         >
-            {subBoxes.map((box, i) => {
-                const outerFaces = getOutermostFaces(box);
-                const isClicked = clickedBoxes.has(i);
-                const selectedFace = clickedFaces.get(i);
-                const isHovered = hoveredBox === i;
-
-                return (
-                    <group key={i} position={[box.x - 5 + box.width / 2, box.y - 5 + box.height / 2, box.z - 5 + box.depth / 2]}>
-                        <mesh
-                            ref={(el) => {
-                                meshRefs.current[i] = el;
-                                if (el) el.userData.boxIndex = i;
-                            }}
-                        >
-                            <boxGeometry args={[box.width, box.height, box.depth]} />
-                            {Object.keys(outerFaces).map((face, faceIndex) => {
-                                if (selectedFace === face && isClicked) {
-                                    return (
-                                        <Portal
-                                            key={faceIndex}
-                                            index={faceIndex}
-                                            scale={[box.width * 0.5, box.height * 0.5, box.depth * 0.5]}
-                                            geometry={bg}
-                                        />
-                                    );
-                                }
-
-                                return (
-                                    <meshBasicMaterial
-                                        key={faceIndex}
-                                        attach={`material-${faceIndex}`}
-                                        color={"white"}
-                                        transparent
-                                        depthWrite={false}
-                                        opacity={isHovered && hoveredFace === face ? 0.1 : 0}
-                                        side={THREE.DoubleSide}
-                                    />
-                                );
-                            })}
-                        </mesh>
-                    </group>
-                );
-            })}
+            {subBoxes.map((box, i) => (
+                <BoxMesh
+                    key={i}
+                    box={box}
+                    index={i}
+                    isClicked={clickedBoxes.has(i)}
+                    selectedFace={clickedFaces.get(i)}
+                    isHovered={hoveredBox === i}
+                    hoveredFace={hoveredFace}
+                    geometry={bg}
+                    onMeshRef={handleMeshRef}
+                />
+            ))}
         </group>
     );
 }

@@ -3,8 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import ThreeCustomShaderMaterial from 'three-custom-shader-material'
-import fragmentShader from "../shaders/room/fragment.glsl";
-import vertexShader from "../shaders/room/vertex.glsl";
+import fragmentShader from "../../shaders/room/fragment.glsl";
+import vertexShader from "../../shaders/room/vertex.glsl";
 import { patchShaders } from "gl-noise";
 import { useControls } from "leva";
 import ObjectMat from "./ObjectMat";

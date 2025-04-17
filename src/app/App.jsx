@@ -1,9 +1,9 @@
 import { Canvas } from '@react-three/fiber';
 import { CameraControls } from "@react-three/drei";
 import { folder, useControls } from "leva";
-import Utilities from "./r3f-gist/utility/Utilities";
-import { GridTexts } from "./grid-texts/GridTexts";
-import Effect from "./Effect";
+import Utilities from "../r3f-gist/utility/Utilities";
+import { GridTexts } from "../components/grid/GridTexts";
+import Effect from "../effects/Effect";
 
 export default function App() {
     // Leva controls for global settings
