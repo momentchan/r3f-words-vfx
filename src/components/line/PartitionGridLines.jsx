@@ -188,9 +188,9 @@ export default function PartitionGridLines({
           `}
         fragmentShader={fragmentShader}
         uniforms={{
-          color: { value: new THREE.Color("white") },
-          opacity: { value: 1.0 },
-          fogDensity: { value: 0.0 },
+          color: new THREE.Color("white"),
+          opacity: 1.0,
+          fogDensity: 0.0,
         }}
 
       />

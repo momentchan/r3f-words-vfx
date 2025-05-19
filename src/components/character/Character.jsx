@@ -30,8 +30,8 @@ export default function Character({ index, charData, lifetime = 3, params }) {
         const ratio = Math.min(elapsedTime / lifetime, 1);
         mat.current.uniforms.time.value = state.clock.elapsedTime;
         mat.current.uniforms.ratio.value = ratio;
-        mat.current.uniforms.fontColor.value.set(controls.fontColor);
-        mat.current.uniforms.fogColor.value.set(params.fogColor);
+        // mat.current.uniforms.fontColor.value = new THREE.Color(controls.fontColor);
+        // mat.current.uniforms.fogColor.value = new THREE.Color(params.fogColor);
         mat.current.uniforms.alpha.value = charData.alpha
         mat.current.uniforms.fogDensity.value = params.fogDensity
         mat.current.uniforms.tiling.value = controls.tiling
@@ -56,20 +56,20 @@ export default function Character({ index, charData, lifetime = 3, params }) {
                 depthWrite={false}
                 side={THREE.DoubleSide}
                 uniforms={{
-                    time: { value: 0 },
-                    fontColor: { value: new THREE.Color(0.2, 0.0, 0.1) },
-                    fogColor: { value: new THREE.Color(0.2, 0.0, 0.1) },
-                    alpha: { value: 1.0 },
-                    side: { value: THREE.DoubleSide },
-                    tiling: { value: 1.0 },
-                    speed: { value: 1.0 },
-                    noiseRange: { value: new THREE.Vector2(0, 1) },
-                    screenResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-                    ratio: { value: 0.0 },
-                    seed: { value: Math.random() },
-                    hshift: { value: 0 },
-                    fogDensity: { value: 0.0 },
-                  }}
+                    time: 0,
+                    fontColor: new THREE.Color(controls.fontColor),
+                    fogColor: new THREE.Color(params.fogColor),
+                    alpha: 1.0,
+                    side: THREE.DoubleSide,
+                    tiling: 1.0,
+                    speed: 1.0,
+                    noiseRange: new THREE.Vector2(0, 1),
+                    screenResolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+                    ratio: 0.0,
+                    seed: Math.random(),
+                    hshift: 0,
+                    fogDensity: 0.0,
+                }}
             />
         </Text>
     );
